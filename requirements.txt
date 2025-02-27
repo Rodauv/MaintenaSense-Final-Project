@@ -1,0 +1,22 @@
+# Core Python Dependencies
+python>=3.8,<3.13
+
+# Data Processing
+pandas>=1.3.0
+numpy>=1.21.0
+scipy>=1.7.0
+
+# Machine Learning & AI Models
+tensorflow>=2.9.0
+scikit-learn>=1.0
+torch>=1.12.0
+keras>=2.9.0
+
+# Visualization & Dashboard
+matplotlib>=3.4.3
+seaborn>=0.11.2
+streamlit>=1.10.0
+
+
+#Install requirements:
+pip install -r requirements.txt
