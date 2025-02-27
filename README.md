@@ -35,12 +35,17 @@ cd MaintenaSense
 pip install -r requirements.txt
 ```
 
-3️. Run the Application
+3. Download the dataset
+```
+https://www.kaggle.com/datasets/nphantawee/pump-sensor-data?resource=download
+```
+
+4. Run the Application
 ```
 python src/main.py
 ```
 
-4. Start the Dashboard (if applicable)
+5. Start the Dashboard (if applicable)
 ```
 streamlit run dashboard/app.py
 ```

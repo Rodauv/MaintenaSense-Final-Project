@@ -27,7 +27,7 @@ def detect_anomalies(df, sensors_of_interest, contamination=0.02):
     anomalies_if = model.fit_predict(model_data)
 
     # Convert the prediction (-1 for anomaly, 1 for normal) to 'Y' for anomalies and 'N' for normal
-    df['anomaly'] = [1 if x == -1 else 0 for x in anomalies_if]
+    df['anomaly_isolationforest'] = [1 if x == -1 else 0 for x in anomalies_if]
 
     return df
 
