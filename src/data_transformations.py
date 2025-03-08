@@ -64,6 +64,8 @@ def test_train_split_lstm(df, cutoff, timesteps=10):
     X_train = df_train.drop(columns=["timestamp", "machine_status_code"]).values
     X_test = df_test.drop(columns=["timestamp", "machine_status_code"]).values
 
+    print(f"{X_train.shape=}")
+
     y_train = df_train["machine_status_code"].values
     y_test = df_test["machine_status_code"].values
 
@@ -95,6 +97,8 @@ def test_train_split_dense(df, cutoff):
     # Split into train and test sets
     df_train = df[df["timestamp"] < cutoff].copy()
     df_test = df[df["timestamp"] >= cutoff].copy()
+
+    print(f"{df_train.shape=}")
 
     # Drop timestamp and label for X
     X_train = df_train.drop(columns=["timestamp", "machine_status_code"]).values

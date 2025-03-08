@@ -13,10 +13,10 @@ MaintenaSense is a predictive maintenance system designed to reduce unexpected m
 ### Repository Structure
 ```
 /MaintenaSense
+│── /dashboard           # Dashboard to show the information about the sensors
 │── /data                # Sensor datasets and maintenance logs
 │── /models              # Machine learning models (LSTM, GRU, etc.)
 │── /src                 # Core application logic (data ingestion, ML processing)
-│── /dashboard           # Front-end for visualization
 │── /docs                # Project documentation
 │── README.md            # Project overview & setup instructions
 │── requirements.txt     # Dependencies list

@@ -8,6 +8,7 @@ from tensorflow.keras.regularizers import l1
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, LSTM, RepeatVector, TimeDistributed, Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import legacy
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -49,19 +50,19 @@ def create_autoencoder(input_dim):
     ...
     """
     model = Sequential()
-    model.add(Dense(64, input_dim=input_dim, activation='relu'))
+    model.add(Dense(7, input_dim=input_dim, activation='relu'))
     #model.add(Dropout(0.2)) # drop 20% to prevent overfitting
     #model.add(Dense(32, input_dim=input_dim, activation='relu'))
     #model.add(Dropout(0.2)) # drop 20% to prevent overfitting
-    model.add(Dense(32, activation='relu'))
+    model.add(Dense(4, activation='relu'))
     #model.add(Dropout(0.2))
-    model.add(Dense(16, activation='relu'))  # Latent layer with a reduced number of features
+    model.add(Dense(2, activation='relu'))  # Latent layer with a reduced number of features
     #model.add(Dense(16, activation='relu', activity_regularizer=l1(0.001)))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(4, activation='relu'))
+    model.add(Dense(7, activation='relu'))
     model.add(Dense(input_dim, activation='sigmoid'))  # Output layer with same dimension as input
-    #model.compile(optimizer='adam', loss='mean_squared_error')
-    model.compile(optimizer='adam', loss='huber')
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    #model.compile(optimizer='adam', loss='huber')
     #model.compile(optimizer='adam', loss='logcosh')
     return model
 

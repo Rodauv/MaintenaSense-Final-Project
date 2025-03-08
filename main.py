@@ -1,79 +1,89 @@
-# Import the libraries and functions
-import numpy as np
+import os
 import pandas as pd
-import sklearn
-import tensorflow
-import joblib
-from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import train_test_split
+import numpy as np
 from tensorflow.keras.models import load_model
+from sqlalchemy import create_engine
+import time
 from datetime import datetime
 
-from src.data_transformations import test_train_split_dense, test_train_split_lstm
-from src.anomaly_detection import create_autoencoder, create_lstm_autoencoder
+# Path to the drop folder
+DROP_FOLDER = '/data/drop'
+PROCESSED_FOLDER = '/data/predictions'
 
-# Print the lib versions for validation
-print("===========LIBRARY VERSIONS========")
-print(f"Pandas: {pd.__version__}")
-print(f"Numpy: {np.__version__}")
-print(f"Sklearn: {sklearn.__version__}")
-print(f"Tensorflow: {tensorflow.__version__}")
-print(f"Joblib: {joblib.__version__}")
+# Path to models
+MODEL_PATH_1 = 'models/pdense_autoencoder.h5'
+MODEL_PATH_2 = 'models/lstm_autoencoder.h5'
 
-# Define input parameters
-CUTOFF_DATE = "2018-06-30"
-HISTORY_FILE = "data/clean/sensor_clean.pqt"
-LSTM_MODEL_PATH = "models/lstm_autoencoder.h5"
-AUTOENCODER_MODEL_PATH = "models/dense_autoencoder.h5"
-METRIC_COLUMNS = ['sensor_00','sensor_04','sensor_10','sensor_06','sensor_11','sensor_07','sensor_02']
-print("===========INPUT PARAMETERS========")
-print(f"Input parameters created with custoff date: {CUTOFF_DATE}")
+# Database connection
+DATABASE_URL = 'postgresql://username:password@localhost/dbname'
 
-# Load historical data
-df = pd.read_parquet(HISTORY_FILE)
-print("History loaded")
+# Load models
+model1 = load_model(MODEL_PATH_1)
+model2 = load_model(MODEL_PATH_2)
 
-# LSTM-specific train-test split
-X_train_lstm, X_test_lstm, y_train_lstm, y_test_lstm, scaler_lstm = test_train_split_lstm(df, CUTOFF_DATE)
+def load_and_predict(file_path):
+    """
+    This function loads the CSV, makes predictions using the two models,
+    and appends predictions to the database.
+    """
+    # Load the CSV data
+    df = pd.read_csv(file_path)
 
-# Dense Autoencoder-specific train-test split
-X_train_dense, X_test_dense, y_train_dense, y_test_dense, scaler_dense = test_train_split_dense(df, CUTOFF_DATE)
-print("Test & Train split complete")
+    # Preprocess data
+    X = df.drop(columns=['target_column'])
+    X = X.values
 
-# ===================== TRAIN & SAVE MODELS ===================== #
+    # Model predictions
+    prediction1 = model1.predict(X)
+    prediction2 = model2.predict(X)
 
-print("Training LSTM Autoencoder...")
-lstm_model = create_lstm_autoencoder(X_train_lstm.shape[1:])
-lstm_model.fit(X_train_lstm, X_train_lstm, epochs=50, batch_size=64, validation_split=0.2, verbose=1)
-lstm_model.save(LSTM_MODEL_PATH)
-print(f"LSTM model saved to {LSTM_MODEL_PATH}")
+    # Add predictions to the dataframe
+    df['prediction_model_1'] = prediction1
+    df['prediction_model_2'] = prediction2
 
-print("Training Dense Autoencoder...")
-autoencoder = create_autoencoder(X_train_dense.shape[1])
-autoencoder.fit(X_train_dense, X_train_dense, epochs=50, batch_size=64, validation_split=0.2, verbose=1)
-autoencoder.save(AUTOENCODER_MODEL_PATH)
-print(f"Dense Autoencoder model saved to {AUTOENCODER_MODEL_PATH}")
+    # Save the predictions to the database
+    save_to_database(df)
 
-# ===================== TEST & EVALUATE MODELS ===================== #
+    # Move the processed file to the processed folder
+    os.rename(file_path, os.path.join(PROCESSED_FOLDER, os.path.basename(file_path)))
 
-# Load LSTM model & predict
-lstm_model = load_model(LSTM_MODEL_PATH)
-X_lstm = df[METRIC_COLUMNS].values.reshape((df.shape[0], 10, df.shape[1] // 10))
-X_reconstructed = lstm_model.predict(X_lstm)
-reconstruction_error = np.mean(np.square(X_lstm - X_reconstructed), axis=(1, 2))
-threshold_lstm = np.percentile(reconstruction_error, 99)
-df["anomaly_lstm"] = (reconstruction_error > threshold_lstm).astype(int)
+def save_to_database(df):
+    """
+    This function appends the data with predictions to the database.
+    """
+    engine = create_engine(DATABASE_URL)
+    df.to_sql('predictions_table', con=engine, if_exists='append', index=False)
 
-# Load Autoencoder model & predict
-autoencoder = load_model(AUTOENCODER_MODEL_PATH)
-X_reconstructed = autoencoder.predict(df[METRIC_COLUMNS].values)
-reconstruction_error = np.mean(np.square(df[METRIC_COLUMNS].values - X_reconstructed), axis=1)
-threshold_autoencoder = np.percentile(reconstruction_error, 99)
-df["anomaly_autoencoder"] = (reconstruction_error > threshold_autoencoder).astype(int)
+def process_files():
+    """
+    This function processes new CSV files in the drop folder every time it's called.
+    """
+    # List all CSV files in the drop folder
+    files = [f for f in os.listdir(DROP_FOLDER) if f.endswith('.csv')]
 
-# Combine anomalies (LSTM + Autoencoder)
-df["anomaly_combined"] = ((df["anomaly_lstm"] + df["anomaly_autoencoder"]) >= 1).astype(int)
+    if not files:
+        print("No files to process.")
+        return
 
-# Save results
-df.to_csv("data/predictions/anomaly_results_production.csv", index=False)
-print("Final anomaly detection results saved.")
+    for file in files:
+        file_path = os.path.join(DROP_FOLDER, file)
+        print(f"Processing file: {file_path}")
+
+        # Load and predict the values
+        load_and_predict(file_path)
+
+        print(f"File {file} processed successfully.")
+
+def main():
+    """
+    Main function to run the process every hour, or from bash execution.
+    """
+    # Run the process every hour
+    while True:
+        process_files()
+        print(f"Waiting for the next run at {datetime.now()}")
+        time.sleep(3600)  # Sleep for 1 hour
+
+if __name__ == "__main__":
+    # Run the script from the command line
+    main()
