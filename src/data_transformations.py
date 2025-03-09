@@ -77,7 +77,7 @@ def test_train_split_lstm(df, cutoff, timesteps=10):
     X_train_seq, y_train_seq = create_sequences(X_train_scaled, y_train, timesteps)
     X_test_seq, y_test_seq = create_sequences(X_test_scaled, y_test, timesteps)
 
-    print(f"X_train shape: {X_train_seq.shape}, X_test shape: {X_test_seq.shape}")
+    print(f"{X_train_seq.shape=}, {X_test_seq.shape=}")
 
     return X_train_seq, X_test_seq, y_train_seq, y_test_seq, scaler
 

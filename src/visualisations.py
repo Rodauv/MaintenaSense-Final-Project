@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.metrics import f1_score
 
 def time_series_error_by_sensor(df,df_broken,df_recovery,metric_columns): 
     """
@@ -107,3 +108,40 @@ def show_anomaly_distribution(df,anomalies_df,breakdowns_df):
 
     plt.tight_layout()
     plt.show()
+
+def plot_f1_score(y_test, reconstruction_errors, model_name="Autoencoder"):
+    """
+    Computes and plots the F1-score over different threshold values for anomaly detection models.
+
+    Parameters:
+    - y_test: True anomaly labels (1 for failure, 0 for normal).
+    - reconstruction_errors: Computed reconstruction errors from the model.
+    - model_name: Model name for labeling the plot.
+    """
+    # Find the range of possible thresholds
+    min_thresh, max_thresh = np.min(reconstruction_errors), np.max(reconstruction_errors)
+    thresholds = np.linspace(min_thresh, max_thresh, 100)
+
+    f1_scores = []
+    
+    for threshold in thresholds:
+        anomaly_preds = reconstruction_errors > threshold
+        f1 = f1_score(y_test, anomaly_preds)
+        f1_scores.append(f1)
+
+    # Plot the F1-score across different thresholds
+    plt.figure(figsize=(8, 5))
+    plt.plot(thresholds, f1_scores, marker='o', label=f"{model_name} F1 Score")
+    plt.xlabel("Anomaly Detection Threshold")
+    plt.ylabel("F1 Score")
+    plt.title(f"F1 Score vs. Anomaly Detection Threshold ({model_name})")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # Best threshold
+    best_thresh = thresholds[np.argmax(f1_scores)]
+    best_f1 = max(f1_scores)
+    print(f"Best F1 Score for {model_name}: {best_f1:.4f} at Threshold: {best_thresh:.4f}")
+    
+    return best_thresh, best_f1
