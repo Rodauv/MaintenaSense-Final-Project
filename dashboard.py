@@ -16,10 +16,10 @@ engine = create_engine(f"sqlite:///{HISTORY_DB}")
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    html.H1("📊 Anomaly Detection Dashboard"),
+    html.H1("Anomaly Detection Dashboard"),
     
     # Run Anomaly Detection Button
-    html.Button("🔍 Run Anomaly Detection", id="run-anomaly-btn", n_clicks=0, style={"margin-bottom": "20px"}),
+    html.Button("Run Anomaly Detection", id="run-anomaly-btn", n_clicks=0, style={"margin-bottom": "20px"}),
     
     # Placeholder for confirmation message
     html.Div(id="run-anomaly-output", style={"font-weight": "bold", "color": "green"}),
@@ -87,7 +87,7 @@ def run_anomaly_detection_callback(n_clicks):
     if n_clicks > 0:
         ctx.triggered_id
         run_anomaly_detection()  # Run the function
-        return "✅ Anomaly Detection Completed & Database Updated!"
+        return "    Anomaly Detection Completed & Database Updated!"
     return ""
 
 # Run Dash App

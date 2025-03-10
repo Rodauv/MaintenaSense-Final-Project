@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
@@ -116,3 +117,38 @@ def test_train_split_dense(df, cutoff):
 
     return X_train_scaled, X_test_scaled, y_train, y_test, scaler
 
+def dataframe_standardisation(df):
+    # Drop the ignored columns
+    df = df.drop(columns=['Unnamed: 0','sensor_15','sensor_50'])
+
+    # Transform to datetime format
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df = df.sort_values(by='timestamp')
+
+    #Transform machine status to integer values
+    df['machine_status_code'] = df['machine_status'].replace({
+        'NORMAL': '0', 
+        'BROKEN': '1', 
+        'RECOVERING': '2'
+    })
+
+    df['machine_status_code'] = df['machine_status_code'].astype('int')
+
+    df_clean = df[
+        [
+        'timestamp',
+        'hour',
+        'day_of_week',
+        'month',
+        'sensor_00',
+        'sensor_04',
+        'sensor_10',
+        'sensor_06',
+        'sensor_11',
+        'sensor_07',
+        'sensor_02',
+        'machine_status_code',
+        ]
+    ]
+
+    return df

@@ -4,6 +4,8 @@ import numpy as np
 from sqlalchemy import create_engine
 from tensorflow.keras.models import load_model
 
+from src.data_transformations import dataframe_standardisation
+
 # Define file paths
 HISTORY_DB = "data/hist/history.sql"
 NEW_READING_FILE = "data/drop/readings.csv"
@@ -11,7 +13,15 @@ GRADIENTBOOST_MODEL_PATH = "models/GradientBoost_model.pkl"
 RANDOMFOREST_MODEL_PATH = "models/RandomForest_model.pkl"
 AUTOENCODER_MODEL_PATH = "models/dense_autoencoder.h5"
 LSTM_MODEL_PATH = "models/lstm_autoencoder.h5"
-METRIC_COLUMNS = ['sensor_00', 'sensor_04', 'sensor_10', 'sensor_06', 'sensor_11', 'sensor_07', 'sensor_02']
+METRIC_COLUMNS = [
+        'sensor_00',
+        'sensor_04',
+        'sensor_10',
+        'sensor_06',
+        'sensor_11',
+        'sensor_07',
+        'sensor_02'
+        ]
 
 # Connect to SQL database
 engine = create_engine(f"sqlite:///{HISTORY_DB}")
@@ -34,20 +44,36 @@ def run_anomaly_detection():
         history_df = pd.read_sql("SELECT * FROM history", engine)
     except:
         history_df = pd.DataFrame(columns=["timestamp"] + METRIC_COLUMNS + ["machine_status_code"])
-    
+
     # Load new readings
     try:
         new_data = pd.read_csv(NEW_READING_FILE)
+        new_data = dataframe_standardisation(new_data)
     except FileNotFoundError:
-        print("⚠️ No new readings found.")
+        print("No new readings found.")
         return
     
-    print(f"✅ Loaded {len(new_data)} new readings.")
+    print(f"Loaded {len(new_data)} new readings.")
+    print("Checking column names in new_data:", new_data.columns.tolist())
+
+    # 🔹 Ensure Column Names Match METRIC_COLUMNS
+    new_data.columns = new_data.columns.str.strip()  # Remove extra spaces
+    new_data.columns = new_data.columns.str.lower()  # Convert to lowercase for consistency
+    metric_columns_lower = [col.lower() for col in METRIC_COLUMNS]  # Ensure match
+
+    # 🔹 Check if METRIC_COLUMNS exist in new_data
+    missing_cols = [col for col in metric_columns_lower if col not in new_data.columns]
+    if missing_cols:
+        print(f"Missing expected sensor columns: {missing_cols}")
+        return
+    
+    # 🔹 Rename columns to match expected format
+    new_data = new_data.rename(columns=dict(zip(new_data.columns, METRIC_COLUMNS)))
 
     # Ensure timestamp column exists
     if "timestamp" not in new_data.columns:
         new_data["timestamp"] = pd.to_datetime("now")
-    
+
     # Load models
     models = load_models()
 
@@ -69,7 +95,7 @@ def run_anomaly_detection():
         time_steps = expected_lstm_shape[1]
         num_samples = X_lstm.shape[0] // time_steps
         X_lstm = X_lstm[: num_samples * time_steps].reshape((num_samples, time_steps, expected_lstm_shape[2]))
-    
+
     X_reconstructed_lstm = models["LSTM"].predict(X_lstm)
     reconstruction_error_lstm = np.mean(np.square(X_lstm - X_reconstructed_lstm), axis=(1, 2))
     threshold_lstm = np.percentile(reconstruction_error_lstm, 99)
@@ -80,7 +106,7 @@ def run_anomaly_detection():
 
     # Append to SQL database
     new_data.to_sql("history", con=engine, index=False, if_exists="append")
-    print(f"✅ Updated history with {len(new_data)} new readings.")
+    print(f"Updated history with {len(new_data)} new readings.")
 
     return new_data
 

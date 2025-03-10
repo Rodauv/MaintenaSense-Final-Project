@@ -22,7 +22,7 @@ GRADIENTBOOST_MODEL_PATH = "models/GradientBoost_model.pkl"
 RANDOMFOREST_MODEL_PATH = "models/RandomForest_model.pkl"
 LSTM_MODEL_PATH = "models/lstm_autoencoder.h5"
 AUTOENCODER_MODEL_PATH = "models/dense_autoencoder.h5"
-METRIC_COLUMNS = ['sensor_00','sensor_04','sensor_10','sensor_06','sensor_11','sensor_07','sensor_02']
+METRIC_COLUMNS = ['sensor_00','sensor_04','sensor_06','sensor_11','sensor_02']
 print("===========INPUT PARAMETERS========")
 print(f"Input parameters created with cutoff date: {CUTOFF_DATE}")
 
