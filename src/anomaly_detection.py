@@ -15,7 +15,15 @@ from keras.layers import Dense
 
 def detect_anomalies(df, sensors_of_interest, contamination=0.02):
     """
-    ...
+    Anomaly detection using IsolationForrest.
+
+    Paramters:
+        input dataframe
+        sensors of interest - i.e.: metric_columns
+        contamination value
+
+    REturns:
+        dataframe with a new column with 1 and 0 if an anomaly was detected
     """
     
     # Prepare the data for modeling (using sensor columns)
@@ -33,6 +41,19 @@ def detect_anomalies(df, sensors_of_interest, contamination=0.02):
     return df
 
 def create_isolation_forest(X_train,X_test):
+    """
+    Anomaly detection using IsolationForrest with more fine tuning options.
+
+    Paramters:
+        input X_train and X_test
+        contamination value (‘auto’ or float, default=’auto’): The amount of contamination of the data set, i.e. the proportion of outliers in the data set. Used when fitting to define the threshold on the scores of the samples.
+        n_esttimators (default = 100): The number of base estimators in the ensemble
+        max_samples (“auto”, int or float, default=”auto”): The number of samples to draw from X to train each base estimator.
+        random_state (int, RandomState instance or None, default=None): Controls the pseudo-randomness of the selection of the feature and split values for each branching step and each tree in the forest.
+
+    Returns:
+        dataframe with a new column with 1 and 0 if an anomaly was detected
+    """
     # Initialize the Isolation Forest model
     model = IsolationForest(contamination=0.01, n_estimators=100, max_samples='auto', random_state=42)
 
@@ -47,7 +68,13 @@ def create_isolation_forest(X_train,X_test):
 
 def create_autoencoder(input_dim):
     """
-    ...
+    Anomaly detection using dense autoencoder.
+
+    Paramters
+        input_dim
+
+    Returns:
+        model: compiled dense model
     """
     model = Sequential()
     model.add(Dense(7, input_dim=input_dim, activation='relu'))
