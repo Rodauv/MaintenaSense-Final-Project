@@ -39,10 +39,10 @@ def run_anomaly_detection():
     try:
         new_data = pd.read_csv(NEW_READING_FILE)
     except FileNotFoundError:
-        print("⚠️ No new readings found.")
+        print("No new readings found.")
         return
     
-    print(f"✅ Loaded {len(new_data)} new readings.")
+    print(f"Loaded {len(new_data)} new readings.")
 
     # Ensure timestamp column exists
     if "timestamp" not in new_data.columns:
@@ -80,7 +80,7 @@ def run_anomaly_detection():
 
     # Append to SQL database
     new_data.to_sql("history", con=engine, index=False, if_exists="append")
-    print(f"✅ Updated history with {len(new_data)} new readings.")
+    print(f"Updated history with {len(new_data)} new readings.")
 
     return new_data
 
