@@ -34,7 +34,7 @@ def test_train_split(df,cutoff):
     df_test  = df[df["timestamp"] >= cutoff_date]
 
     # Separate features and labels for train vs. test
-    X_train = df_train.drop(columns=["timestamp","machine_status_code"])  # or your label column
+    X_train = df_train.drop(columns=["timestamp","machine_status_code"])
     y_train = df_train["machine_status_code"]
 
     X_test = df_test.drop(columns=["timestamp","machine_status_code"])
